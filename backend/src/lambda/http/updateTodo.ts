@@ -1,25 +1,27 @@
 import 'source-map-support/register'
-
-import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
-import { updateTodoItem } from '../../businessLogic/ToDo'
-import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
-import { getUserId } from '../utils'
+import {APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult} from 'aws-lambda'
+import {UpdateTodoRequest} from '../../requests/UpdateTodoRequest'
+import {updateToDo} from "../../businessLogic/ToDo";
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Processing event: ', event)
-  
-  const userId = getUserId(event)
-  const todoId = event.pathParameters.todoId
-  const updatedTodoRequest: UpdateTodoRequest = JSON.parse(event.body)
+    // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
+    console.log("Processing Event ", event);
+    const authorization = event.headers.Authorization;
+    const split = authorization.split(' ');
+    const jwtToken = split[1];
 
-  await updateTodoItem(updatedTodoRequest, userId, todoId)
+    const todoId = event.pathParameters.todoId;
+    const updatedTodo: UpdateTodoRequest = JSON.parse(event.body);
 
-  return {
-    statusCode: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true
-    },
-    body: JSON.stringify({})
-  }
-}
+    const toDoItem = await updateToDo(updatedTodo, todoId, jwtToken);
+
+    return {
+        statusCode: 200,
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+            "item": toDoItem
+        }),
+    }
+};
